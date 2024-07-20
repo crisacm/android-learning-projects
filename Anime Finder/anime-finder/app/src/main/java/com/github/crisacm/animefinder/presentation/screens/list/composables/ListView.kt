@@ -92,7 +92,14 @@ fun ListScreen(modifier: Modifier) {
         }
         LazyColumn(modifier = Modifier.padding(top = 12.dp)) {
             items(numbers) {
-                AnimeCard()
+                AnimeCard(
+                    modifier = Modifier,
+                    coverUrl = "https://toonamisquad.com/wp-content/uploads/2019/02/Attack-On-Titan-S1.jpg",
+                    genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
+                    animeName = "Attack on Titan",
+                    episodes = 123,
+                    rating = 4.5
+                )
             }
         }
     }
