@@ -1,6 +1,7 @@
 package com.github.crisacm.animefinder.presentation.screens.list.composables
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Image
 import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -40,7 +44,7 @@ fun AnimeCard(
     coverUrl: String,
     genders: List<String>,
     animeName: String,
-    episodes: Int,
+    extraInfo: List<String>,
     rating: Double
 ) {
     Card(
@@ -78,9 +82,17 @@ fun AnimeCard(
             ) {
                 Text(text = genders.joinToString(separator = " - "), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(text = animeName, fontWeight = FontWeight.Bold)
-                Row {
-                    Text(text = "Episodes ", fontSize = 13.sp)
-                    Text(text = episodes.toString(), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                LazyRow(modifier = Modifier.padding(top = 6.dp)) {
+                    items(extraInfo) { text ->
+                        Card(
+                            shape = RoundedCornerShape(60),
+                            modifier = Modifier.padding(end = 8.dp),
+                            border = BorderStroke(1.dp, Color.Gray),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                        ) {
+                            Text(text = text, modifier = Modifier.padding(start = 6.dp, end = 6.dp), fontSize = 10.sp)
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -101,7 +113,7 @@ fun AnimeCardPreview() {
             coverUrl = "",
             genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
             animeName = "Attack on Titan",
-            episodes = 123,
+            extraInfo = listOf("PG13", "2023", "2h 20m"),
             rating = 4.5
         )
     }
@@ -116,7 +128,7 @@ fun AnimeCardPreviewDark() {
             coverUrl = "",
             genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
             animeName = "Attack on Titan",
-            episodes = 123,
+            extraInfo = listOf("PG13", "2023", "2h 20m"),
             rating = 4.5
         )
     }
