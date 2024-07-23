@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.hilt.plugin)
+    alias(libs.plugins.ksp)
+    kotlin("kapt")
 }
 
 android {
@@ -65,9 +69,39 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Coil
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation(libs.coil.compose)
 
     // Material Icons Extended
-    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation(libs.androidx.material.icons.extended)
 
+    // Logged
+    implementation(libs.timber)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Lifecycle
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.extensions)
+
+    // Navigation + Serialization
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // network
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
+    implementation(libs.okhttp.interceptor)
+    implementation(libs.easy.retrofit.adapter)
+
+    // json parsing
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
 }

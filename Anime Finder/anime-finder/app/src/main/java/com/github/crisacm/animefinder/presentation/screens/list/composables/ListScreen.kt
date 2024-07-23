@@ -28,14 +28,21 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.crisacm.animefinder.presentation.screens.list.ListContracts
 import com.github.crisacm.animefinder.ui.theme.AnimeFinderTheme
+import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun ListScreen(modifier: Modifier) {
+fun ListScreen(
+    state: ListContracts.State,
+    effectFlow: Flow<ListContracts.Effect>?,
+    onEventSent: (ListContracts.Event) -> Unit,
+    onNavigationRequested: (ListContracts.Effect.Navigation) -> Unit
+) {
     val searchBy = remember { mutableStateOf(TextFieldValue("")) }
     val numbers = remember { (0..20).toList() }
 
-    Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             Row(
                 modifier = Modifier
@@ -83,7 +90,12 @@ fun ListScreen(modifier: Modifier) {
 @Composable
 fun ListPreview() {
     AnimeFinderTheme {
-        ListScreen(Modifier)
+        ListScreen(
+            state = ListContracts.State(),
+            effectFlow = null,
+            onEventSent = {},
+            onNavigationRequested = {}
+        )
     }
 }
 
@@ -91,6 +103,11 @@ fun ListPreview() {
 @Composable
 fun ListPreviewDark() {
     AnimeFinderTheme {
-        ListScreen(Modifier)
+        ListScreen(
+            state = ListContracts.State(),
+            effectFlow = null,
+            onEventSent = {},
+            onNavigationRequested = {}
+        )
     }
 }
