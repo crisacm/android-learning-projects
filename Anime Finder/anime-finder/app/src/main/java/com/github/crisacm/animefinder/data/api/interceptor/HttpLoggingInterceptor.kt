@@ -4,4 +4,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 
 fun getInterceptor(): HttpLoggingInterceptor =
-  HttpLoggingInterceptor { message -> Timber.i(message) }
+  HttpLoggingInterceptor { message -> Timber.i(message) }.apply {
+    setLevel(HttpLoggingInterceptor.Level.BODY)
+  }

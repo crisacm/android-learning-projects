@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Settings
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -34,80 +35,91 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ListScreen(
-    state: ListContracts.State,
-    effectFlow: Flow<ListContracts.Effect>?,
-    onEventSent: (ListContracts.Event) -> Unit,
-    onNavigationRequested: (ListContracts.Effect.Navigation) -> Unit
+  state: ListContracts.State,
+  effectFlow: Flow<ListContracts.Effect>?,
+  onEventSent: (ListContracts.Event) -> Unit,
+  onNavigationRequested: (ListContracts.Effect.Navigation) -> Unit
 ) {
-    val searchBy = remember { mutableStateOf(TextFieldValue("")) }
-    val numbers = remember { (0..20).toList() }
+  val searchBy = remember { mutableStateOf(TextFieldValue("")) }
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, top = 0.dp, end = 24.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Anime Finder",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(modifier = Modifier, imageVector = Icons.TwoTone.Settings, contentDescription = null)
-                }
-            }
-            Card(
-                shape = RoundedCornerShape(100),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, top = 18.dp, end = 24.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    SearchView(modifier = Modifier, state = searchBy)
-                }
-            }
-            LazyColumn(modifier = Modifier.padding(top = 12.dp)) {
-                items(numbers) {
-                    AnimeCard(
-                        modifier = Modifier,
-                        coverUrl = "https://toonamisquad.com/wp-content/uploads/2019/02/Attack-On-Titan-S1.jpg",
-                        genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
-                        animeName = "Attack on Titan",
-                        extraInfo = listOf("PG13", "2023", "2h 20m"),
-                        rating = 4.5
-                    )
-                }
-            }
+  Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    Column(modifier = Modifier.padding(innerPadding)) {
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(start = 24.dp, top = 0.dp, end = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Text(
+          text = "Anime Finder",
+          fontWeight = FontWeight.Bold,
+          fontSize = 28.sp
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        IconButton(onClick = { /*TODO*/ }) {
+          Icon(modifier = Modifier, imageVector = Icons.TwoTone.Settings, contentDescription = null)
         }
+      }
+      Card(
+        shape = RoundedCornerShape(100),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(start = 24.dp, top = 18.dp, end = 24.dp)
+      ) {
+        Box(contentAlignment = Alignment.Center) {
+          SearchView(modifier = Modifier, state = searchBy)
+        }
+      }
+      if (state.isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          CircularProgressIndicator()
+        }
+      } else {
+        if (state.loadData.isEmpty()) {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = "No are data to show", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+          }
+        } else {
+          LazyColumn(modifier = Modifier.padding(top = 12.dp)) {
+            items(state.loadData) { anime ->
+              AnimeCard(
+                modifier = Modifier,
+                coverUrl = anime.images.jpg.imageUrl,
+                genders = anime.genres.map { it.name },
+                animeName = anime.title,
+                extraInfo = listOf(anime.duration, anime.rating),
+                rating = anime.score
+              )
+            }
+          }
+        }
+      }
     }
+  }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ListPreview() {
-    AnimeFinderTheme {
-        ListScreen(
-            state = ListContracts.State(),
-            effectFlow = null,
-            onEventSent = {},
-            onNavigationRequested = {}
-        )
-    }
+  AnimeFinderTheme {
+    ListScreen(
+      state = ListContracts.State(),
+      effectFlow = null,
+      onEventSent = {},
+      onNavigationRequested = {}
+    )
+  }
 }
 
 @Preview(showBackground = true, showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ListPreviewDark() {
-    AnimeFinderTheme {
-        ListScreen(
-            state = ListContracts.State(),
-            effectFlow = null,
-            onEventSent = {},
-            onNavigationRequested = {}
-        )
-    }
+  AnimeFinderTheme {
+    ListScreen(
+      state = ListContracts.State(),
+      effectFlow = null,
+      onEventSent = {},
+      onNavigationRequested = {}
+    )
+  }
 }
