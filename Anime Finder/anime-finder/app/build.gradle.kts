@@ -71,6 +71,9 @@ dependencies {
   debugImplementation(libs.androidx.ui.tooling)
   debugImplementation(libs.androidx.ui.test.manifest)
 
+  // App Initializer
+  implementation(libs.androidx.startup.runtime)
+
   // Coil
   implementation(libs.coil.compose)
 
