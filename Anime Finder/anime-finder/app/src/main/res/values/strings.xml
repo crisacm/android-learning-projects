@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Anime Finder</string>
+    <string name="network_issues">Network Issues</string>
+    <string name="we_all_make_mistakes">We all make mistakes</string>
+    <string name="couldn_t_load_data">Couldn\'t load data</string>
+    <string name="We_re_sorry">We\'re sorry</string>
+    <string name="internet_connection_is_bad">Internet connection is bad, but no worries, we got it! Try reload the app</string>
+    <string name="it_s_my_bad_i_made_a_mistake_when_loading_your_files">It\'s my bad! I made a mistake when loading your files</string>
+    <string name="there_seems_to_be_no_information_to_display">There seems to be no information to display</string>
+    <string name="we_ve_searched_a_lot_of_animes_but_we_couldn_t_find">We\'ve searched a lot of animes, but we couldn\'t find what you were looking for</string>
 </resources>
