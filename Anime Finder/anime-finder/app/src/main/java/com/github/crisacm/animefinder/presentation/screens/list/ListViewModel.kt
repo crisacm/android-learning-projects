@@ -7,6 +7,7 @@ import com.github.crisacm.animefinder.data.repository.ListRepo
 import com.github.crisacm.animefinder.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,7 +27,7 @@ class ListViewModel @Inject constructor(
         onSuccess = { setState { copy(isLoading = false) } },
         onError = { setState { copy(isLoading = false, error = it) } }
       ).collect {
-        Timber.i("Size: ${it.size}")
+        delay(1000)
         setState { copy(isLoading = false, loadData = it) }
       }
     }

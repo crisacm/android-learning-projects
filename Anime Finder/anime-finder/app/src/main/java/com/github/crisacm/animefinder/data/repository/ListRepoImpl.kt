@@ -5,7 +5,9 @@ import com.github.crisacm.animefinder.AnimeFinderDispatcher
 import com.github.crisacm.animefinder.Dispatcher
 import com.github.crisacm.animefinder.data.api.model.Anime
 import com.github.crisacm.animefinder.data.api.service.AnimeClient
+import com.github.crisacm.module.easyretrofit.model.onError
 import com.github.crisacm.module.easyretrofit.model.onFailed
+import com.github.crisacm.module.easyretrofit.model.onSuccess
 import com.github.crisacm.module.easyretrofit.model.onSuspendSuccess
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import timber.log.Timber
 import javax.inject.Inject
 
 class ListRepoImpl @Inject constructor(
@@ -28,9 +31,9 @@ class ListRepoImpl @Inject constructor(
     onError: (String) -> Unit
   ): Flow<List<Anime>> = flow {
     val response = animeClient.fetchAnimeList(page)
-    response.onSuspendSuccess {
-      emit(data.data)
-    }.onFailed { onError(message) }
+    response.onSuspendSuccess { emit(data.data) }
+      .onFailed { onError(message) }
+      .onError { onError("Response error: ${t.message}") }
   }
     .onStart { onStart() }
     .onCompletion { onSuccess() }

@@ -1,6 +1,7 @@
 package com.github.crisacm.animefinder.presentation.screens.list.composables
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,8 +9,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Settings
@@ -29,6 +31,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.crisacm.animefinder.data.api.model.Anime
 import com.github.crisacm.animefinder.presentation.screens.list.ListContracts
 import com.github.crisacm.animefinder.ui.theme.AnimeFinderTheme
 import kotlinx.coroutines.flow.Flow
@@ -70,22 +73,35 @@ fun ListScreen(
           SearchView(modifier = Modifier, state = searchBy)
         }
       }
-      if (state.isLoading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          CircularProgressIndicator()
-        }
-      } else {
-        if (state.loadData.isEmpty()) {
+      when {
+        state.isLoading -> {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "No are data to show", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+            CircularProgressIndicator()
           }
-        } else {
-          LazyColumn(modifier = Modifier.padding(top = 12.dp)) {
+        }
+
+        !state.error.isNullOrEmpty() -> {
+          ListAlert(modifier = Modifier.fillMaxSize(), typeAlert = TypeAlert.ERROR_FETCHING_DATA)
+        }
+
+        state.error.isNullOrEmpty() && state.loadData.isEmpty() -> {
+          ListAlert(modifier = Modifier.fillMaxSize(), typeAlert = TypeAlert.EMPTY)
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = "No data", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+          }
+        }
+
+        state.loadData.isNotEmpty() -> {
+          LazyVerticalGrid(
+            modifier = Modifier.padding(top = 12.dp),
+            columns = GridCells.Fixed(2),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+          ) {
             items(state.loadData) { anime ->
               AnimeCard(
                 modifier = Modifier,
-                coverUrl = anime.images.jpg.imageUrl,
-                genders = anime.genres.map { it.name },
+                coverUrl = anime.images.jpg?.imageUrl ?: "",
+                genders = anime.genres?.map { it.name ?: "" } ?: emptyList(),
                 animeName = anime.title,
                 extraInfo = listOf(anime.duration, anime.rating),
                 rating = anime.score
@@ -101,19 +117,6 @@ fun ListScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ListPreview() {
-  AnimeFinderTheme {
-    ListScreen(
-      state = ListContracts.State(),
-      effectFlow = null,
-      onEventSent = {},
-      onNavigationRequested = {}
-    )
-  }
-}
-
-@Preview(showBackground = true, showSystemUi = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun ListPreviewDark() {
   AnimeFinderTheme {
     ListScreen(
       state = ListContracts.State(),
