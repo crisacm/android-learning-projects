@@ -1,18 +1,14 @@
 package com.github.crisacm.animefinder.presentation.screens.list.composables
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Image
@@ -28,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,96 +35,94 @@ import com.github.crisacm.animefinder.ui.theme.colorYellowRatingStar
 
 @Composable
 fun AnimeCard(
-    modifier: Modifier,
-    coverUrl: String,
-    genders: List<String>,
-    animeName: String,
-    extraInfo: List<String>,
-    rating: Double
+  modifier: Modifier,
+  coverUrl: String,
+  genders: List<String>,
+  animeName: String,
+  extraInfo: List<String>,
+  rating: Double
 ) {
+  Column(
+    modifier = modifier.padding(start = 24.dp, top = 6.dp, end = 24.dp, bottom = 6.dp)
+  ) {
     Card(
-        shape = RoundedCornerShape(4.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .padding(start = 24.dp, top = 6.dp, end = 24.dp, bottom = 6.dp)
+      shape = RoundedCornerShape(8.dp),
+      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(modifier = modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .width(110.dp)
-                    .height(150.dp)
-                    .background(Color.Gray),
-                contentAlignment = Alignment.Center
-            ) {
-                SubcomposeAsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(coverUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    loading = {
-                        CircularProgressIndicator()
-                    }
-                )
-                Icon(imageVector = Icons.TwoTone.Image, contentDescription = null)
-            }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 12.dp)
-            ) {
-                Text(text = genders.joinToString(separator = " - "), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(text = animeName, fontWeight = FontWeight.Bold)
-                LazyRow(modifier = Modifier.padding(top = 6.dp)) {
-                    items(extraInfo) { text ->
-                        Card(
-                            shape = RoundedCornerShape(60),
-                            modifier = Modifier.padding(end = 8.dp),
-                            border = BorderStroke(1.dp, Color.Gray),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                        ) {
-                            Text(text = text, modifier = Modifier.padding(start = 6.dp, end = 6.dp), fontSize = 10.sp)
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.TwoTone.Star, contentDescription = null, tint = colorYellowRatingStar)
-                    Text(text = rating.toString(), fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
-                }
-            }
-        }
+      Box(
+        modifier = Modifier
+          .width(150.dp)
+          .height(200.dp)
+          .background(Color.Gray),
+        contentAlignment = Alignment.Center
+      ) {
+        SubcomposeAsyncImage(
+          model = ImageRequest.Builder(LocalContext.current)
+            .data(coverUrl)
+            .crossfade(true)
+            .build(),
+          modifier = Modifier.fillMaxSize(),
+          contentDescription = null,
+          contentScale = ContentScale.FillWidth,
+          loading = {
+            CircularProgressIndicator()
+          }
+        )
+      }
     }
+    Text(
+      text = animeName,
+      modifier = Modifier
+        .padding(start = 4.dp, top = 6.dp, end = 4.dp)
+        .width(150.dp),
+      overflow = TextOverflow.Ellipsis,
+      lineHeight = 16.sp,
+      maxLines = 2
+    )
+    Box(modifier = Modifier
+      .width(150.dp)
+      .padding(top = 6.dp)) {
+      Column {
+        LazyRow {
+          items(5) { i ->
+            Icon(
+              imageVector = Icons.TwoTone.Star,
+              contentDescription = null,
+              tint = if ((i + 1) <= (rating.toInt() / 2)) colorYellowRatingStar else Color.Gray
+            )
+          }
+        }
+      }
+    }
+  }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun AnimeCardPreview() {
-    AnimeFinderTheme {
-        AnimeCard(
-            modifier = Modifier,
-            coverUrl = "",
-            genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
-            animeName = "Attack on Titan",
-            extraInfo = listOf("PG13", "2023", "2h 20m"),
-            rating = 4.5
-        )
-    }
+  AnimeFinderTheme {
+    AnimeCard(
+      modifier = Modifier,
+      coverUrl = "",
+      genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
+      animeName = "Attack on Titan",
+      extraInfo = listOf("PG13", "2023", "2h 20m"),
+      rating = 4.5
+    )
+  }
 }
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun AnimeCardPreviewDark() {
-    AnimeFinderTheme {
-        AnimeCard(
-            modifier = Modifier,
-            coverUrl = "",
-            genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
-            animeName = "Attack on Titan",
-            extraInfo = listOf("PG13", "2023", "2h 20m"),
-            rating = 4.5
-        )
-    }
+  AnimeFinderTheme {
+    AnimeCard(
+      modifier = Modifier,
+      coverUrl = "",
+      genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
+      animeName = "Attack on Titan",
+      extraInfo = listOf("PG13", "2023", "2h 20m"),
+      rating = 4.5
+    )
+  }
 }

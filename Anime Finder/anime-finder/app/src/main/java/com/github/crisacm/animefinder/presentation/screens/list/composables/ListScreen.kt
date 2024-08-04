@@ -1,6 +1,5 @@
 package com.github.crisacm.animefinder.presentation.screens.list.composables
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.Settings
+import androidx.compose.material.icons.twotone.SettingsInputComponent
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -31,7 +30,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.crisacm.animefinder.data.api.model.Anime
 import com.github.crisacm.animefinder.presentation.screens.list.ListContracts
 import com.github.crisacm.animefinder.ui.theme.AnimeFinderTheme
 import kotlinx.coroutines.flow.Flow
@@ -50,17 +48,13 @@ fun ListScreen(
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(start = 24.dp, top = 0.dp, end = 24.dp),
+          .padding(start = 24.dp, top = 6.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Text(
-          text = "Anime Finder",
-          fontWeight = FontWeight.Bold,
-          fontSize = 28.sp
-        )
+        Text(text = "Anime Finder", fontWeight = FontWeight.Bold, fontSize = 28.sp)
         Spacer(modifier = Modifier.weight(1f))
         IconButton(onClick = { /*TODO*/ }) {
-          Icon(modifier = Modifier, imageVector = Icons.TwoTone.Settings, contentDescription = null)
+          Icon(modifier = Modifier, imageVector = Icons.TwoTone.SettingsInputComponent, contentDescription = null)
         }
       }
       Card(
