@@ -14,6 +14,12 @@ data class AnimeResponse(
 
 @Parcelize
 @JsonClass(generateAdapter = true)
+data class AnimeFullResponse(
+  val data: Anime?
+) : Parcelable
+
+@Parcelize
+@JsonClass(generateAdapter = true)
 data class Pagination(
   @Json(name = "last_visible_page") val lastVisiblePage: Int,
   @Json(name = "has_next_page") val hasNextPage: Boolean,

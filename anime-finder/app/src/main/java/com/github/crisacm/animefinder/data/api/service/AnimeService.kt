@@ -1,5 +1,6 @@
 package com.github.crisacm.animefinder.data.api.service
 
+import com.github.crisacm.animefinder.data.api.model.AnimeFullResponse
 import com.github.crisacm.animefinder.data.api.model.AnimeResponse
 import com.github.crisacm.module.easyretrofit.model.ApiResult
 import retrofit2.http.GET
@@ -17,5 +18,5 @@ interface AnimeService {
   @GET("anime/{id}/full")
   suspend fun fetchAnimeDetail(
     @Path("id") id: Int
-  ): ApiResult<Any>
+  ): ApiResult<AnimeFullResponse>
 }

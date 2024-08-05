@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,18 +31,38 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.github.crisacm.animefinder.data.api.model.Anime
+import com.github.crisacm.animefinder.presentation.base.SIDE_EFFECTS_KEY
 import com.github.crisacm.animefinder.presentation.screens.list.ListContracts
 import com.github.crisacm.animefinder.ui.theme.AnimeFinderTheme
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun ListScreen(
+  animes: Flow<PagingData<Anime>>,
   state: ListContracts.State,
   effectFlow: Flow<ListContracts.Effect>?,
   onEventSent: (ListContracts.Event) -> Unit,
   onNavigationRequested: (ListContracts.Effect.Navigation) -> Unit
 ) {
   val searchBy = remember { mutableStateOf(TextFieldValue("")) }
+  val list = animes.collectAsLazyPagingItems()
+
+  LaunchedEffect(SIDE_EFFECTS_KEY) {
+    effectFlow?.onEach { effect ->
+      when (effect) {
+        is ListContracts.Effect.Navigation.ToDetails -> {
+          onNavigationRequested(effect)
+        }
+      }
+    }?.collect()
+  }
 
   Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
     Column(modifier = Modifier.padding(innerPadding)) {
@@ -86,6 +107,7 @@ fun ListScreen(
         }
 
         state.loadData.isNotEmpty() -> {
+          /*
           LazyVerticalGrid(
             modifier = Modifier.padding(top = 12.dp),
             columns = GridCells.Fixed(2),
@@ -98,8 +120,38 @@ fun ListScreen(
                 genders = anime.genres?.map { it.name ?: "" } ?: emptyList(),
                 animeName = anime.title,
                 extraInfo = listOf(anime.duration, anime.rating),
-                rating = anime.score
+                rating = anime.score,
+                onClick = {
+                  onEventSent(ListContracts.Event.Select(id = anime.malId.toLong()))
+                }
               )
+            }
+          }
+          */
+
+          LazyVerticalGrid(
+            modifier = Modifier.padding(top = 12.dp),
+            columns = GridCells.Fixed(2),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+          ) {
+            items(
+              count = list.itemCount,
+              key = list.itemKey { it.malId }
+            ) { index ->
+              val anime = list[index]
+              if (anime != null) {
+                AnimeCard(
+                  modifier = Modifier,
+                  coverUrl = anime.images.jpg?.imageUrl ?: "",
+                  genders = anime.genres?.map { it.name ?: "" } ?: emptyList(),
+                  animeName = anime.title,
+                  extraInfo = listOf(anime.duration, anime.rating),
+                  rating = anime.score,
+                  onClick = {
+                    onEventSent(ListContracts.Event.Select(id = anime.malId.toLong()))
+                  }
+                )
+              }
             }
           }
         }
@@ -113,6 +165,7 @@ fun ListScreen(
 fun ListPreview() {
   AnimeFinderTheme {
     ListScreen(
+      animes = remember { flowOf(PagingData.empty()) },
       state = ListContracts.State(),
       effectFlow = null,
       onEventSent = {},

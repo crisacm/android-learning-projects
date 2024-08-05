@@ -1,5 +1,7 @@
 package com.github.crisacm.animefinder.di
 
+import com.github.crisacm.animefinder.data.repository.InfoRepo
+import com.github.crisacm.animefinder.data.repository.InfoRepoImpl
 import com.github.crisacm.animefinder.data.repository.ListRepo
 import com.github.crisacm.animefinder.data.repository.ListRepoImpl
 import dagger.Binds
@@ -13,4 +15,7 @@ interface DataModule {
 
   @Binds
   fun bindListRepo(listRepoImpl: ListRepoImpl): ListRepo
+
+  @Binds
+  fun bindInfoRepo(infoRepoImpl: InfoRepoImpl): InfoRepo
 }

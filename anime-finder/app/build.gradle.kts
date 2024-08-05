@@ -110,4 +110,7 @@ dependencies {
   // json parsing
   implementation(libs.moshi)
   ksp(libs.moshi.codegen)
+
+  // Paging
+  implementation("androidx.paging:paging-compose:3.3.1")
 }

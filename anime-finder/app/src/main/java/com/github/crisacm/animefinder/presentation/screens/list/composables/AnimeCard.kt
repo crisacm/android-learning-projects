@@ -40,14 +40,16 @@ fun AnimeCard(
   genders: List<String>,
   animeName: String,
   extraInfo: List<String>,
-  rating: Double
+  rating: Double,
+  onClick: () -> Unit
 ) {
   Column(
     modifier = modifier.padding(start = 24.dp, top = 6.dp, end = 24.dp, bottom = 6.dp)
   ) {
     Card(
       shape = RoundedCornerShape(8.dp),
-      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+      onClick = onClick
     ) {
       Box(
         modifier = Modifier
@@ -107,7 +109,8 @@ fun AnimeCardPreview() {
       genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
       animeName = "Attack on Titan",
       extraInfo = listOf("PG13", "2023", "2h 20m"),
-      rating = 4.5
+      rating = 4.5,
+      onClick = {}
     )
   }
 }
@@ -122,7 +125,8 @@ fun AnimeCardPreviewDark() {
       genders = listOf("Action", "Adventure", "Fantasy", "Sci-Fi"),
       animeName = "Attack on Titan",
       extraInfo = listOf("PG13", "2023", "2h 20m"),
-      rating = 4.5
+      rating = 4.5,
+      onClick = {}
     )
   }
 }

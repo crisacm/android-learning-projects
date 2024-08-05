@@ -12,6 +12,7 @@ import com.github.crisacm.animefinder.presentation.screens.list.composables.List
 fun ListScreenDestination(navController: NavController) {
   val viewModel: ListViewModel = hiltViewModel()
   ListScreen(
+    animes = viewModel.animes,
     state = viewModel.viewState.value,
     effectFlow = viewModel.effect,
     onEventSent = viewModel::setEvent,
