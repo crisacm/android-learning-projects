@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -26,6 +28,8 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,6 +38,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,17 +48,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.crisacm.domain.model.Task
 import com.github.crisacm.ui.theme.LightGray
 import com.github.crisacm.ui.theme.Purple
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-
-data class Task(
-  var id: Int = 0, val name: String, var isCompleted: Boolean
-)
 
 private val loremIpsumText = """
     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
@@ -68,29 +72,34 @@ private val mockData by lazy {
   List(3) { index ->
     val start = (0..loremIpsumText.length / 2).random()
     val end = (start + (50..150).random()).coerceAtMost(loremIpsumText.length)
-    Task(index, loremIpsumText.substring(start, end), false)
+    Task(index.toLong(), loremIpsumText.substring(start, end), false)
   }
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+  state: HomeContracts.State,
+  onEvent: (HomeContracts.Events) -> Unit,
+  effect: Flow<HomeContracts.Effect>?
+) {
   val query = remember { mutableStateOf("") }
   val tasks = remember { mutableStateListOf<Task>().apply { addAll(mockData) } }
   val filteredTasks = if (query.value.isEmpty()) {
-    tasks
+    state.tasks
   } else {
-    tasks.filter { it.name.contains(query.value, ignoreCase = true) }
+    state.tasks.filter { it.title.contains(query.value, ignoreCase = true) }
   }
 
+  val snackbarHostState = remember { SnackbarHostState() }
   val skipHalfExpanded by remember { mutableStateOf(false) }
-  val state = rememberModalBottomSheetState(
+  val modalBottomSheetState = rememberModalBottomSheetState(
     initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = skipHalfExpanded
   )
   val scope = rememberCoroutineScope()
 
   fun addTask(task: Task) {
     tasks.add(
-      task.apply { id = tasks.size + 1 }
+      task.apply { id = (tasks.size + 1).toLong() }
     )
   }
 
@@ -103,22 +112,34 @@ fun HomeScreen() {
 
   fun updateState() {
     scope.launch {
-      if (state.isVisible) {
-        state.hide()
+      if (modalBottomSheetState.isVisible) {
+        modalBottomSheetState.hide()
       } else {
-        state.show()
+        modalBottomSheetState.show()
+      }
+    }
+  }
+
+  LaunchedEffect(Unit) {
+    effect?.collect { effect ->
+      when (effect) {
+        is HomeContracts.Effect.ShowMsg -> {
+          snackbarHostState.showSnackbar(effect.msg)
+        }
       }
     }
   }
 
   ModalBottomSheetLayout(
-    sheetState = state, sheetContent = {
+    sheetState = modalBottomSheetState, sheetContent = {
       SheetContent {
-        addTask(it)
+        // addTask(it)
+        onEvent(HomeContracts.Events.OnTaskAdded(it))
         updateState()
       }
     }) {
     Scaffold(
+      snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
       floatingActionButton = {
         FloatingActionButton(
           backgroundColor = Purple,
@@ -140,49 +161,105 @@ fun HomeScreen() {
           }
         }
       }) { innerPadding ->
-      LazyColumn(modifier = Modifier.padding(innerPadding)) {
-        item {
-          Box(modifier = Modifier.padding(12.dp)) {
-            OutlinedTextField(
-              modifier = Modifier.fillMaxWidth(),
-              shape = RoundedCornerShape(50.dp),
-              value = query.value,
-              onValueChange = { query.value = it },
-              leadingIcon = {
-                Icon(
-                  Icons.Filled.Search,
-                  contentDescription = "Search",
-                  modifier = Modifier.padding(start = 8.dp),
-                )
-              },
-              trailingIcon = {
-                if (query.value.isNotEmpty()) {
-                  IconButton(
-                    modifier = Modifier.padding(end = 8.dp),
-                    onClick = { query.value = "" }) {
-                    Icon(Icons.Filled.Clear, contentDescription = "Clear")
-                  }
+      Column(
+        modifier =
+          Modifier
+            .padding(innerPadding)
+            .fillMaxSize()
+      ) {
+        Box(modifier = Modifier.padding(12.dp)) {
+          OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(50.dp),
+            value = query.value,
+            onValueChange = { query.value = it },
+            leadingIcon = {
+              Icon(
+                Icons.Filled.Search,
+                contentDescription = "Search",
+                modifier = Modifier.padding(start = 8.dp),
+              )
+            },
+            trailingIcon = {
+              if (query.value.isNotEmpty()) {
+                IconButton(
+                  modifier = Modifier.padding(end = 8.dp),
+                  onClick = { query.value = "" }) {
+                  Icon(Icons.Filled.Clear, contentDescription = "Clear")
                 }
-              },
-              placeholder = { Text(text = "Search...") },
-              singleLine = true
+              }
+            },
+            placeholder = { Text(text = "Search...") },
+            singleLine = true
+          )
+        }
+
+        if (state.isLoading) {
+          Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+          ) {
+            CircularProgressIndicator(
+              modifier = Modifier.size(24.dp),
+              strokeWidth = 2.dp,
+            )
+            Text(
+              modifier =
+                Modifier
+                  .fillMaxSize()
+                  .padding(top = 6.dp),
+              text = "Loading...",
+              color = Color.Gray,
+              fontSize = 18.sp,
+              fontWeight = FontWeight.Bold,
+              textAlign = TextAlign.Center,
             )
           }
-        }
-        items(filteredTasks) { task ->
-          AnimatedVisibility(
-            visible = true,
-            enter = fadeIn(animationSpec = tween(durationMillis = 500)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 500))
-          ) {
-            TaskItem(
-              task = task,
-              onCheckChange = { t, isCompleted -> updateTask(t, isCompleted) },
-              onDelete = { tasks.remove(it) }
-            )
+        } else {
+          if (filteredTasks.isNotEmpty()) {
+            LazyColumn {
+              items(filteredTasks) { task ->
+                AnimatedVisibility(
+                  visible = true,
+                  enter = fadeIn(animationSpec = tween(durationMillis = 500)),
+                  exit = fadeOut(animationSpec = tween(durationMillis = 500))
+                ) {
+                  TaskItem(
+                    task = task,
+                    onCheckChange = { t, isCompleted ->
+                      onEvent(
+                        HomeContracts.Events.OnTaskUpdated(
+                          t.copy(isCompleted = isCompleted)
+                        )
+                      )
+                    },
+                    onDelete = {
+                      onEvent(HomeContracts.Events.OnTaskDeleted(it))
+                      // tasks.remove(it)
+                    }
+                  )
+                }
+              }
+            }
+          } else {
+            Box(
+              modifier = Modifier.fillMaxSize(),
+              contentAlignment = Alignment.Center,
+            ) {
+              Text(
+                modifier = Modifier.fillMaxSize(),
+                text = "No tasks found",
+                color = Color.Gray,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+              )
+            }
           }
         }
       }
+
+      onEvent(HomeContracts.Events.OnLoad)
     }
   }
 }
@@ -220,7 +297,7 @@ fun SheetContent(
       modifier = Modifier.fillMaxWidth(),
       shape = RoundedCornerShape(8.dp),
       onClick = {
-        onSave(Task(name = taskName.value, isCompleted = false))
+        onSave(Task(title = taskName.value, isCompleted = false))
         taskName.value = ""
       }) {
       Text("Save Task")
@@ -254,7 +331,7 @@ fun TaskItem(
           Modifier
             .weight(1f)
             .padding(top = 4.dp, bottom = 4.dp),
-        text = task.name,
+        text = task.title,
         textDecoration = if (task.isCompleted) {
           TextDecoration.LineThrough
         } else {
