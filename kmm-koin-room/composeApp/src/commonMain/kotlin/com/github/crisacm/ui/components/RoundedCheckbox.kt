@@ -1,0 +1,84 @@
+package com.github.crisacm.ui.components
+
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun RoundedCheckbox(
+  modifier: Modifier = Modifier,
+  isChecked: Boolean,
+  size: Float = 24f,
+  checkedColor: Color = Color.Blue.copy(alpha = 0.5f),
+  uncheckedColor: Color = Color.White,
+  onValueChange: (Boolean) -> Unit
+) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    modifier =
+      modifier
+        .toggleable(
+          value = isChecked,
+          role = Role.Checkbox,
+          onValueChange = onValueChange
+        ),
+  ) {
+    Card(
+      modifier = Modifier.background(Color.Transparent),
+      elevation = 0.dp,
+      shape = RoundedCornerShape(20.dp),
+      border = BorderStroke(2.dp, color = Color.Gray)
+    ) {
+      val density = LocalDensity.current
+      val duration = 200
+
+      Box(
+        modifier = Modifier
+          .size(25.dp)
+          .background(if (isChecked) checkedColor else uncheckedColor)
+          .clickable { onValueChange(!isChecked) },
+        contentAlignment = Alignment.Center
+      ) {
+        androidx.compose.animation.AnimatedVisibility(
+          visible = isChecked,
+          enter = slideInHorizontally(animationSpec = tween(duration)) {
+            with(density) { (size * -0.5).dp.roundToPx() }
+          } + expandHorizontally(
+            expandFrom = Alignment.Start,
+            animationSpec = tween(duration)
+          ),
+          exit = fadeOut()
+        ) {
+          Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = null,
+            tint = uncheckedColor,
+            modifier = Modifier.padding(4.dp)
+          )
+        }
+      }
+    }
+
+  }
+}

@@ -71,6 +71,9 @@ kotlin {
             // SQLiteBundled
             implementation(libs.sqlite)
             implementation(libs.sqlite.bundled)
+
+            // Kotlinx Datetime
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

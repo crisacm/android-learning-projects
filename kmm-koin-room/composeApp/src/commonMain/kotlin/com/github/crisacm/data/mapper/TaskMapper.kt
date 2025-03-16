@@ -7,6 +7,7 @@ fun Task.asEntity(): TaskEntity {
   return TaskEntity(
     id = id,
     title = title,
+    createdAt = createdAt,
     isCompleted = isCompleted
   )
 }
@@ -15,6 +16,7 @@ fun TaskEntity.asDomain(): Task {
   return Task(
     id = id,
     title = title,
+    createdAt = createdAt,
     isCompleted = isCompleted
   )
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -17,13 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
 import androidx.compose.material.Card
-import androidx.compose.material.Checkbox
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.OutlinedTextField
@@ -33,14 +30,11 @@ import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,32 +43,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.crisacm.domain.model.Task
-import com.github.crisacm.ui.theme.LightGray
-import com.github.crisacm.ui.theme.Purple
+import com.github.crisacm.ui.components.SearchBar
+import com.github.crisacm.ui.components.TagItem
+import com.github.crisacm.ui.components.TaskItem
+import com.github.crisacm.ui.theme.BlueLightBackground
+import com.github.crisacm.ui.theme.BlueLightBorder
+import com.github.crisacm.utils.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-
-private val loremIpsumText = """
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud 
-    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
-    dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt 
-    mollit anim id est laborum.
-""".trimIndent()
-
-private val mockData by lazy {
-  List(3) { index ->
-    val start = (0..loremIpsumText.length / 2).random()
-    val end = (start + (50..150).random()).coerceAtMost(loremIpsumText.length)
-    Task(index.toLong(), loremIpsumText.substring(start, end), false)
-  }
-}
+import kotlinx.datetime.Clock
 
 @Composable
 fun HomeScreen(
@@ -82,12 +62,25 @@ fun HomeScreen(
   onEvent: (HomeContracts.Events) -> Unit,
   effect: Flow<HomeContracts.Effect>?
 ) {
+  val tag = remember { mutableStateOf(HomeScreenTags.ALL) }
   val query = remember { mutableStateOf("") }
-  val tasks = remember { mutableStateListOf<Task>().apply { addAll(mockData) } }
   val filteredTasks = if (query.value.isEmpty()) {
-    state.tasks
+    state.tasks.filter {
+      when (tag.value) {
+        HomeScreenTags.ALL -> true
+        HomeScreenTags.OPEN -> !it.isCompleted
+        HomeScreenTags.CLOSED -> it.isCompleted
+      }
+    }
   } else {
-    state.tasks.filter { it.title.contains(query.value, ignoreCase = true) }
+    state.tasks.filter {
+      it.title.contains(query.value, ignoreCase = true) &&
+          when (tag.value) {
+            HomeScreenTags.ALL -> true
+            HomeScreenTags.OPEN -> !it.isCompleted
+            HomeScreenTags.CLOSED -> it.isCompleted
+          }
+    }
   }
 
   val snackbarHostState = remember { SnackbarHostState() }
@@ -96,19 +89,6 @@ fun HomeScreen(
     initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = skipHalfExpanded
   )
   val scope = rememberCoroutineScope()
-
-  fun addTask(task: Task) {
-    tasks.add(
-      task.apply { id = (tasks.size + 1).toLong() }
-    )
-  }
-
-  fun updateTask(task: Task, isCompleted: Boolean) {
-    val index = tasks.indexOf(task)
-    if (index != -1) {
-      tasks[index] = task.copy(isCompleted = isCompleted)
-    }
-  }
 
   fun updateState() {
     scope.launch {
@@ -131,66 +111,87 @@ fun HomeScreen(
   }
 
   ModalBottomSheetLayout(
+    sheetShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
     sheetState = modalBottomSheetState, sheetContent = {
       SheetContent {
-        // addTask(it)
         onEvent(HomeContracts.Events.OnTaskAdded(it))
         updateState()
       }
     }) {
     Scaffold(
       snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-      floatingActionButton = {
-        FloatingActionButton(
-          backgroundColor = Purple,
-          shape = RoundedCornerShape(16.dp),
-          onClick = { updateState() }) {
-          Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Add, contentDescription = "Add", tint = Color.White
-            )
-            Text(
-              modifier = Modifier.padding(start = 8.dp, end = 8.dp),
-              text = "ADD",
-              color = Color.White,
-              fontWeight = FontWeight.SemiBold
-            )
-          }
-        }
-      }) { innerPadding ->
+    ) { innerPadding ->
       Column(
         modifier =
           Modifier
             .padding(innerPadding)
             .fillMaxSize()
       ) {
-        Box(modifier = Modifier.padding(12.dp)) {
-          OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(50.dp),
-            value = query.value,
-            onValueChange = { query.value = it },
-            leadingIcon = {
-              Icon(
-                Icons.Filled.Search,
-                contentDescription = "Search",
-                modifier = Modifier.padding(start = 8.dp),
+        SearchBar(
+          modifier = Modifier.padding(24.dp),
+          searchBy = query.value,
+          onSearch = { query.value = it }
+        )
+
+        Row(
+          modifier = Modifier.padding(start = 24.dp, end = 24.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Column {
+            Text(
+              text = "Today's Tasks",
+              fontSize = 24.sp,
+              fontWeight = FontWeight.Bold
+            )
+            Text(
+              text = DateUtils.convertLongToDate(Clock.System.now().toEpochMilliseconds()),
+              fontSize = 16.sp,
+              color = Color.Gray
+            )
+          }
+          Spacer(modifier = Modifier.weight(1f))
+          Card(
+            shape = RoundedCornerShape(12.dp),
+            backgroundColor = BlueLightBackground,
+            modifier = Modifier.clickable { updateState() },
+            border = BorderStroke(1.dp, BlueLightBorder)
+          ) {
+            Row(
+              modifier = Modifier.padding(12.dp, 8.dp, 12.dp, 8.dp),
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Icon(Icons.Default.Add, "Add Task")
+              Text(
+                text = "New Task",
+                modifier = Modifier.padding(start = 8.dp)
               )
-            },
-            trailingIcon = {
-              if (query.value.isNotEmpty()) {
-                IconButton(
-                  modifier = Modifier.padding(end = 8.dp),
-                  onClick = { query.value = "" }) {
-                  Icon(Icons.Filled.Clear, contentDescription = "Clear")
-                }
-              }
-            },
-            placeholder = { Text(text = "Search...") },
-            singleLine = true
+            }
+          }
+        }
+
+        Row(
+          modifier =
+            Modifier
+              .padding(start = 12.dp, top = 12.dp, end = 12.dp)
+              .fillMaxWidth(),
+        ) {
+          TagItem(
+            name = "All",
+            size = state.tasks.size,
+            isSelected = tag.value == HomeScreenTags.ALL,
+            onSelected = { tag.value = HomeScreenTags.ALL }
+          )
+          TagItem(
+            name = "Open",
+            size = state.tasks.filter { !it.isCompleted }.size,
+            isSelected = tag.value == HomeScreenTags.OPEN,
+            onSelected = { tag.value = HomeScreenTags.OPEN }
+          )
+          TagItem(
+            name = "Closed",
+            size = state.tasks.filter { it.isCompleted }.size,
+            isSelected = tag.value == HomeScreenTags.CLOSED,
+            onSelected = { tag.value = HomeScreenTags.CLOSED }
           )
         }
 
@@ -203,21 +204,12 @@ fun HomeScreen(
               modifier = Modifier.size(24.dp),
               strokeWidth = 2.dp,
             )
-            Text(
-              modifier =
-                Modifier
-                  .fillMaxSize()
-                  .padding(top = 6.dp),
-              text = "Loading...",
-              color = Color.Gray,
-              fontSize = 18.sp,
-              fontWeight = FontWeight.Bold,
-              textAlign = TextAlign.Center,
-            )
           }
         } else {
           if (filteredTasks.isNotEmpty()) {
-            LazyColumn {
+            LazyColumn(
+              modifier = Modifier.padding(12.dp)
+            ) {
               items(filteredTasks) { task ->
                 AnimatedVisibility(
                   visible = true,
@@ -225,6 +217,7 @@ fun HomeScreen(
                   exit = fadeOut(animationSpec = tween(durationMillis = 500))
                 ) {
                   TaskItem(
+                    modifier = Modifier.padding(12.dp),
                     task = task,
                     onCheckChange = { t, isCompleted ->
                       onEvent(
@@ -235,7 +228,6 @@ fun HomeScreen(
                     },
                     onDelete = {
                       onEvent(HomeContracts.Events.OnTaskDeleted(it))
-                      // tasks.remove(it)
                     }
                   )
                 }
@@ -247,7 +239,6 @@ fun HomeScreen(
               contentAlignment = Alignment.Center,
             ) {
               Text(
-                modifier = Modifier.fillMaxSize(),
                 text = "No tasks found",
                 color = Color.Gray,
                 fontSize = 18.sp,
@@ -270,6 +261,7 @@ fun SheetContent(
   onSave: (Task) -> Unit,
 ) {
   val taskName = remember { mutableStateOf("") }
+  val actualTime = Clock.System.now().toEpochMilliseconds()
   Column(
     modifier =
       modifier
@@ -281,10 +273,10 @@ fun SheetContent(
       modifier = Modifier.fillMaxWidth(),
       text = "Add a new task",
       fontWeight = FontWeight.Bold,
-      fontSize = 18.sp,
+      fontSize = 20.sp,
     )
     OutlinedTextField(
-      modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp),
+      modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp),
       value = taskName.value,
       onValueChange = { taskName.value = it },
       minLines = 3,
@@ -293,60 +285,48 @@ fun SheetContent(
         Text("Add the title of the task")
       },
     )
-    Button(
-      modifier = Modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(8.dp),
-      onClick = {
-        onSave(Task(title = taskName.value, isCompleted = false))
+    Row(modifier = Modifier.padding(bottom = 16.dp)) {
+      Icon(
+        Icons.Default.DateRange,
+        contentDescription = "Date Picker",
+        tint = Color.Gray
+      )
+      Text(
+        modifier = Modifier.padding(start = 8.dp),
+        text = DateUtils.convertLongToDate(actualTime),
+        fontSize = 16.sp,
+        color = Color.Gray
+      )
+    }
+    Card(
+      shape = RoundedCornerShape(12.dp),
+      backgroundColor = BlueLightBackground,
+      modifier = Modifier.clickable {
+        onSave(
+          Task(
+            title = taskName.value,
+            createdAt = actualTime,
+            isCompleted = false
+          )
+        )
         taskName.value = ""
-      }) {
-      Text("Save Task")
+      },
+      border = BorderStroke(1.dp, BlueLightBorder)
+    ) {
+      Text(
+        text = "Save Task",
+        modifier =
+          Modifier
+            .fillMaxWidth()
+            .padding(12.dp, 8.dp, 12.dp, 8.dp),
+        textAlign = TextAlign.Center
+      )
     }
   }
 }
 
-@Composable
-fun TaskItem(
-  modifier: Modifier = Modifier,
-  task: Task,
-  onCheckChange: (Task, Boolean) -> Unit,
-  onDelete: (Task) -> Unit,
-) {
-  Card(
-    modifier = modifier.fillMaxWidth().padding(12.dp, 8.dp, 12.dp, 8.dp)
-      .clickable { onCheckChange(task, !task.isCompleted) },
-    backgroundColor = LightGray,
-    shape = RoundedCornerShape(12.dp),
-    elevation = 0.dp,
-    border = BorderStroke(1.dp, Color.LightGray),
-  ) {
-    Row(
-      modifier = Modifier.fillMaxSize(),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Checkbox(
-        checked = task.isCompleted, onCheckedChange = { onCheckChange(task, it) })
-      Text(
-        modifier =
-          Modifier
-            .weight(1f)
-            .padding(top = 4.dp, bottom = 4.dp),
-        text = task.title,
-        textDecoration = if (task.isCompleted) {
-          TextDecoration.LineThrough
-        } else {
-          TextDecoration.None
-        },
-        maxLines = 3,
-        overflow = TextOverflow.Ellipsis,
-      )
-      IconButton(onClick = { onDelete(task) }) {
-        Icon(
-          imageVector = Icons.Filled.Delete,
-          contentDescription = "Delete",
-          tint = Color.Black
-        )
-      }
-    }
-  }
+enum class HomeScreenTags {
+  ALL,
+  OPEN,
+  CLOSED
 }

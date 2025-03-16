@@ -25,7 +25,7 @@ fun getRoomDatabase(
   builder: RoomDatabase.Builder<TasksDatabase>
 ): TasksDatabase {
   return builder
-    .fallbackToDestructiveMigrationOnDowngrade(true)
+    .fallbackToDestructiveMigration(true)
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
     .build()
